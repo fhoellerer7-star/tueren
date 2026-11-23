@@ -256,6 +256,22 @@
     .report-photo-box .photo-image { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .report-photo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
     .report-photo-box .no-photo { color: #94a3b8; font-style: italic; }
+    .report-repair-done { margin-top: 5px; padding: 4px 6px; background: #dcfce7 !important; color: #166534; font-weight: 800; border: 1px solid #86efac; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .defect-list-page { width: 210mm; min-height: 297mm; padding: 12mm 11mm; break-after: page; page-break-after: always; font: 9pt/1.35 Arial, sans-serif; color: #142033; }
+    .defect-list-page:last-child { break-after: auto; page-break-after: auto; }
+    .defect-list-title { background: #1e3a8a !important; color: white; padding: 10px; font-weight: 800; font-size: 15pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .defect-list-company { font-weight: 700; margin: 7px 0 12px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; }
+    .defect-list-info { margin: 8px 0 12px; }
+    .defect-list-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.5pt; }
+    .defect-list-table th, .defect-list-table td { border: 1px solid #94a3b8; padding: 6px; vertical-align: top; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .defect-list-table th { background: #e8eef9 !important; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .defect-list-table tr { break-inside: avoid; page-break-inside: avoid; }
+    .defect-level { font-weight: 800; }
+    .defect-level.leicht { color: #854d0e; }
+    .defect-level.schwer { color: #9a3412; }
+    .defect-level.gefahr { color: #991b1b; }
+    .repair-state-done { color: #166534; font-weight: 800; }
+    .repair-state-open { color: #9a3412; font-weight: 800; }
     /* Statusfarben im A4-Ausdruck – auch beim PDF-Druck sichtbar */
     .report-checks tr.status-ok { background: #dcfce7 !important; }
     .report-checks tr.status-mangel { background: #ffedd5 !important; }
@@ -271,6 +287,9 @@
     .report-rating.rating-offen { background: #f1f5f9 !important; }
     .report-checks tr, .report-rating { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
+  .repair-toggle { display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; font-weight:700; color:#166534; }
+  .repair-toggle input { width:22px; height:22px; accent-color:#16a34a; flex-shrink:0; }
+  .repair-hint { margin-top:8px; color:#475569; font-size:12px; }
 </style>
 </head>
 <body>
@@ -283,6 +302,8 @@
   <div class="toolbar">
     <button type="button" onclick="openOverview()">Übersicht (1–160)</button>
     <button type="button" onclick="printPDF()">Gesamt-PDF</button>
+    <button type="button" onclick="printDoorDefectsList(false)">Mängelliste (PDF)</button>
+    <button type="button" onclick="printDoorDefectsList(true)">Offene Reparaturen (PDF)</button>
     <button type="button" onclick="exportCSV()">Excel-Liste</button>
     <button type="button" onclick="backupJSON()">Backup sichern</button>
     <button type="button" onclick="document.getElementById('restoreInput').click()">Backup laden</button>
@@ -478,7 +499,14 @@
     </div>
   </div>
 
-  <!-- 5. BEFUND, ZUSATZ & FOTOS -->
+  <!-- Sofort behobene Mängel separat dokumentieren -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">5. Reparatur im Zuge der Wartung</div></div>
+    <label class="repair-toggle"><input type="checkbox" id="dRepairDone" onchange="setDoorRepairDone(this.checked)"><span>Mangel gleich behoben / Reparatur erledigt</span></label>
+    <div id="doorRepairHint" class="repair-hint">Bei sofortiger Behebung anhaken. Die ursprüngliche Mängelbewertung bleibt erhalten.</div>
+  </div>
+
+  <!-- 6. BEFUND, ZUSATZ & FOTOS -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">5. Befund, Zusatz & Fotos</div>
@@ -649,6 +677,7 @@ function getDoor(num) {
       blatt: '', zarge: '',
       checks: ['', '', '', '', '', '', ''],
       sev: '',
+      repairDone: false, repairDate: '',
       defects: [],
       bem: '',
       foto1: '', foto2: '',
@@ -663,7 +692,7 @@ function getDoor(num) {
 
 function isDoorEdited(d) {
   if (!d) return false;
-  if (d.bez || d.geschoss || d.raum || d.blatt || d.zarge || d.sev || d.bem || d.foto1 || d.foto2) return true;
+  if (d.bez || d.geschoss || d.raum || d.blatt || d.zarge || d.sev || d.bem || d.foto1 || d.foto2 || d.repairDone) return true;
   if (Array.isArray(d.checks) && d.checks.some(c => c !== '')) return true;
   if (Array.isArray(d.defects) && d.defects.length > 0) return true;
   return false;
@@ -734,6 +763,11 @@ function renderDoor() {
     btn.classList.toggle('active', btn.dataset.val === d.sev);
   });
 
+  document.getElementById('dRepairDone').checked = d.repairDone === true;
+  document.getElementById('doorRepairHint').textContent = d.repairDone
+    ? '✓ Reparatur erledigt am ' + (d.repairDate || 'Datum nicht erfasst') + '. Der ursprüngliche Mangel bleibt dokumentiert.'
+    : 'Bei sofortiger Behebung anhaken. Die ursprüngliche Mängelbewertung bleibt erhalten.';
+
   // Befund Chips
   document.querySelectorAll('#defectsGroup .chip').forEach(btn => {
     btn.classList.toggle('active', d.defects.includes(btn.dataset.val));
@@ -784,6 +818,15 @@ function setAllChecksOK() {
 function setSeverity(val) {
   const d = getDoor(currentDoor);
   d.sev = (d.sev === val) ? '' : val;
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function setDoorRepairDone(checked) {
+  const d = getDoor(currentDoor);
+  d.repairDone = checked === true;
+  d.repairDate = checked ? (d.repairDate || new Date().toLocaleDateString('de-AT')) : '';
   d.by = store.meta.kuerzel || '';
   renderDoor();
   syncToCloud('doors/' + currentDoor, d);
@@ -946,7 +989,9 @@ function printPDF() {
     html += '<div class="report-assessment-box"><div class="report-rating rating-' + ratingClass + '">3. GESAMTBEWERTUNG / MÄNGELSTUFE: ' + escapePrint(sevLabel(d.sev)) + '</div>';
     html += '<div class="report-section"><div class="report-section-title">4. BEFUND UND BEMERKUNGEN</div>';
     html += '<div class="report-notes"><b>Zargen- und Türschäden:</b> ' + esc(defects.join(', ')) + '</div>';
-    html += '<div class="report-notes"><b>Zusatz / Bemerkungen / Mängelbeschreibung:</b> ' + esc(d.bem) + '</div></div>';
+    html += '<div class="report-notes"><b>Zusatz / Bemerkungen / Mängelbeschreibung:</b> ' + esc(d.bem) + '</div>';
+    if (d.repairDone) html += '<div class="report-repair-done">✓ MANGEL IM ZUGE DER WARTUNG BEHOBEN' + (d.repairDate ? ' · ' + esc(d.repairDate) : '') + '</div>';
+    html += '</div>';
     html += '</div></div><div class="report-photos"><div class="report-photo-title">5. FOTODOKUMENTATION</div><div class="report-photo-grid">';
     html += photo(d.foto1, 'FOTO 1 – Übersicht / Typenschild');
     html += photo(d.foto2, 'FOTO 2 – Detail / Mangel');
@@ -963,9 +1008,57 @@ function printPDF() {
   });
 }
 
+// PDF-Mängelliste: alle festgestellten Mängel oder ausschließlich offene Reparaturen.
+// Die ursprünglichen Prüfwerte werden durch die Reparaturkennzeichnung nicht verändert.
+function printDoorDefectsList(onlyOpen) {
+  const matches = [];
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    const d = store.doors[i];
+    if (!d) continue;
+    const checks = Array.isArray(d.checks) ? d.checks : [];
+    const defects = Array.isArray(d.defects) ? d.defects : [];
+    const hasMangel = checks.includes('Mgl.') || defects.length > 0 || ['leicht','schwer','gefahr'].includes(d.sev);
+    if (!hasMangel || (onlyOpen && d.repairDone === true)) continue;
+    const parts = [];
+    checks.forEach((v, j) => { if (v === 'Mgl.') parts.push(CHECK_LABELS[j]); });
+    if (defects.length) parts.push('Schäden: ' + defects.join(', '));
+    if (d.bem) parts.push('Bemerkung: ' + d.bem);
+    matches.push({i, d, description: parts.join('\n') || 'Mangel festgestellt (ohne Beschreibung)'});
+  }
+  if (!matches.length) {
+    alert(onlyOpen ? 'Für diese Baustelle sind keine offenen Reparaturen erfasst.' : 'Für diese Baustelle sind keine Türen mit Mängeln erfasst.');
+    return;
+  }
+  const e = escapePrint;
+  const title = onlyOpen ? 'OFFENE REPARATUREN – INNENTÜREN' : 'MÄNGELLISTE – INNENTÜREN';
+  const done = matches.filter(m => m.d.repairDone === true).length;
+  let rows = '';
+  matches.forEach(({i,d,description}) => {
+    const cls = ['leicht','schwer','gefahr'].includes(d.sev) ? d.sev : '';
+    const level = d.sev && d.sev !== 'keine' ? sevLabel(d.sev) : 'Mangel (ohne Stufe)';
+    const repair = d.repairDone
+      ? '<span class="repair-state-done">✓ BEHOBEN' + (d.repairDate ? ' am ' + e(d.repairDate) : '') + '</span>'
+      : '<span class="repair-state-open">○ OFFEN</span>';
+    rows += '<tr><td><b>#' + pad3(i) + '</b><div>' + e(d.bez || '') + '</div></td>' +
+      '<td>' + e([d.geschoss,d.raum].filter(Boolean).join(' / ') || '-') + '</td>' +
+      '<td><span class="defect-level ' + cls + '">' + e(level) + '</span></td>' +
+      '<td>' + e(description) + '<div style="margin-top:5px">' + repair + '</div></td></tr>';
+  });
+  const html = '<section class="defect-list-page"><div class="defect-list-title">' + title + '</div>' +
+    '<div class="defect-list-company">Tischlerei Höllerer GmbH · St.Leonhard 149 · 3572 St.Leonhard/Hw</div>' +
+    '<div class="defect-list-info"><b>Objekt / Baustelle:</b> ' + e(store.meta.objekt || '-') +
+    '<br><b>Prüfdatum:</b> ' + e(store.meta.datum || '-') +
+    ' &nbsp; <b>Prüfer:</b> ' + e(store.meta.pruefer || '-') +
+    '<br><b>Baustellen-Code:</b> ' + e(projectCode) +
+    '<br><b>Zusammenfassung:</b> ' + matches.length + (onlyOpen ? ' offene Reparaturen' : ' Türen mit Mängeln (' + done + ' behoben, ' + (matches.length-done) + ' offen)') + '</div>' +
+    '<table class="defect-list-table"><thead><tr><th style="width:13%">Tür</th><th style="width:21%">Geschoss / Raum</th><th style="width:20%">Mängelstufe</th><th style="width:46%">Mängel / Bemerkungen / Status</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
 function exportCSV() {
   const rows = [
-    ['Nr', 'Bezeichnung', 'Geschoss', 'Raum', 'Türblatt', 'Zarge', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'Gesamtbewertung', 'Befund', 'Bemerkung', 'Prüfer']
+    ['Nr', 'Bezeichnung', 'Geschoss', 'Raum', 'Türblatt', 'Zarge', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'Gesamtbewertung', 'Befund', 'Bemerkung', 'Prüfer', 'Reparatur erledigt', 'Reparaturdatum']
   ];
   for (let i = 1; i <= TOTAL_DOORS; i++) {
     const d = store.doors[i];
@@ -973,7 +1066,7 @@ function exportCSV() {
     rows.push([
       pad3(i), d.bez || '', d.geschoss || '', d.raum || '', d.blatt || '', d.zarge || '',
       d.checks[0] || '', d.checks[1] || '', d.checks[2] || '', d.checks[3] || '', d.checks[4] || '', d.checks[5] || '', d.checks[6] || '',
-      sevLabel(d.sev), (d.defects || []).join('; '), (d.bem || '').replace(/\n/g, ' '), d.by || store.meta.kuerzel || ''
+      sevLabel(d.sev), (d.defects || []).join('; '), (d.bem || '').replace(/\n/g, ' '), d.by || store.meta.kuerzel || '', d.repairDone ? 'Ja' : 'Nein', d.repairDone ? (d.repairDate || '') : ''
     ]);
   }
   const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
