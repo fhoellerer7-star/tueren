@@ -219,23 +219,57 @@
   .ov-tile.st-gefahr { background: var(--danger-bg); border-color: var(--danger); color: #7f1d1d; }
   .ov-tile.st-done { background: #e0f2fe; border-color: #0284c7; color: #0c4a6e; }
 
-  /* Print Styles */
+  /* Eigenständiges A4-Protokoll: eine Seite je bearbeiteter Tür */
   #printArea { display: none; }
+  @page { size: A4 portrait; margin: 0; }
   @media print {
-    body { background: #fff; padding: 0; }
+    html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
     header, .container, .nav-bar, .modal-backdrop { display: none !important; }
-    #printArea { display: block !important; font-size: 11pt; color: #000; }
-    .print-header { border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; }
-    .print-header h1 { margin: 0 0 4px 0; font-size: 16pt; color: #1e3a8a; }
-    .print-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 10pt; margin-bottom: 12px; }
-    .print-door { border: 1px solid #94a3b8; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; page-break-inside: avoid; }
-    .print-door-head { font-weight: 800; background: #eff6ff; padding: 4px 8px; margin: -8px -10px 6px -10px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
-    .print-cols { display: flex; gap: 12px; }
-    .print-col-left { width: 62%; }
-    .print-col-right { width: 38%; text-align: center; }
-    .print-col-right img { max-width: 100%; max-height: 110px; border: 1px solid #cbd5e1; margin-bottom: 4px; }
-    table.p-checks { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 4px; }
-    table.p-checks td { border-bottom: 1px solid #e2e8f0; padding: 2px 4px; }
+    #printArea { display: block !important; color: #142033; font: 9pt/1.24 Arial, Helvetica, sans-serif; }
+    #printArea * { box-sizing: border-box; }
+    .report-page { height: 297mm; width: 210mm; padding: 10mm; display: flex; flex-direction: column; break-after: page; page-break-after: always; overflow: hidden; }
+    .report-page:last-child { break-after: auto; page-break-after: auto; }
+    .report-top { flex: 1 1 auto; min-height: 0; }
+    .report-title { background: #1e3a8a !important; color: white !important; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-title strong { font-size: 15pt; }
+    .report-title small { font-size: 8pt; }
+    .report-company { font-size: 8.5pt; font-weight: bold; padding: 4px 2px 3px; border-bottom: 1px solid #cbd5e1; color: #334155; }
+    .report-subtitle { font-size: 10pt; font-weight: bold; padding: 6px 0 4px; border-bottom: 2px solid #1e3a8a; margin-bottom: 6px; }
+    .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin: 5px 0 8px; }
+    .report-field { border-bottom: 1px solid #e2e8f0; padding: 2px 0; overflow-wrap: anywhere; }
+    .report-field b { color: #334155; }
+    .report-section { margin-top: 7px; }
+    .report-section-title { font-size: 9pt; font-weight: 800; background: #e8eef9 !important; padding: 4px 6px; border-left: 3px solid #1e3a8a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-checks { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+    .report-checks td { border-bottom: 1px solid #e2e8f0; padding: 3px 5px; vertical-align: top; }
+    .report-checks td:last-child { width: 21mm; text-align: center; font-weight: bold; white-space: nowrap; }
+    .report-rating { margin-top: 6px; padding: 5px 7px; border: 1px solid #94a3b8; font-weight: bold; }
+    .report-assessment-box { border: 1.5px solid #64748b; border-radius: 5px; margin-top: 7px; padding: 6px 8px; background: #fff; break-inside: avoid; }
+    .report-assessment-box .report-rating { margin-top: 0; }
+    .report-assessment-box .report-section { margin-top: 6px; }
+    .report-notes { margin-top: 5px; font-size: 8.6pt; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .report-photos { height: 111mm; flex: 0 0 111mm; margin-top: 6px; display: flex; flex-direction: column; }
+    .report-photo-title { font-weight: bold; background: #e8eef9 !important; padding: 4px 6px; border-left: 3px solid #1e3a8a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-photo-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 5px; }
+    .report-photo-box { border: 1px solid #94a3b8; min-height: 0; display: flex; flex-direction: column; padding: 4px; }
+    .report-photo-box .photo-label { font-size: 8pt; text-align: center; font-weight: bold; padding-bottom: 3px; }
+    .report-photo-box .photo-image { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .report-photo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .report-photo-box .no-photo { color: #94a3b8; font-style: italic; }
+    /* Statusfarben im A4-Ausdruck – auch beim PDF-Druck sichtbar */
+    .report-checks tr.status-ok { background: #dcfce7 !important; }
+    .report-checks tr.status-mangel { background: #ffedd5 !important; }
+    .report-checks tr.status-nv { background: #fef9c3 !important; }
+    .report-checks tr.status-offen { background: #f1f5f9 !important; }
+    .report-checks tr.status-ok td:last-child { color: #166534; }
+    .report-checks tr.status-mangel td:last-child { color: #9a3412; }
+    .report-checks tr.status-nv td:last-child { color: #854d0e; }
+    .report-rating.rating-keine { background: #dcfce7 !important; border-color: #16a34a; }
+    .report-rating.rating-leicht { background: #fef9c3 !important; border-color: #ca8a04; }
+    .report-rating.rating-schwer { background: #ffedd5 !important; border-color: #ea580c; }
+    .report-rating.rating-gefahr { background: #fee2e2 !important; border-color: #dc2626; }
+    .report-rating.rating-offen { background: #f1f5f9 !important; }
+    .report-checks tr, .report-rating { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 </style>
 </head>
@@ -867,46 +901,66 @@ function sevLabel(s) {
   return '-';
 }
 
+function escapePrint(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function printPDF() {
   const pa = document.getElementById('printArea');
-  let html = '<div class="print-header"><h1>WARTUNGSPROTOKOLL – INNENTÜREN (' + projectCode + ')</h1></div>';
-  html += '<div class="print-meta">';
-  html += '<div><strong>Objekt / Baustelle:</strong> ' + (store.meta.objekt || '-') + '</div>';
-  html += '<div><strong>Prüfdatum:</strong> ' + (store.meta.datum || '-') + '</div>';
-  html += '<div><strong>Prüfer:</strong> ' + (store.meta.pruefer || '-') + ' (' + (store.meta.kuerzel || '-') + ')</div>';
-  html += '<div><strong>Nächste Prüfung:</strong> ' + (store.meta.naechste || '-') + '</div>';
-  html += '</div>';
-
+  const esc = value => escapePrint(value || '-');
+  const field = (label, value) => '<div class="report-field"><b>' + label + ':</b> ' + esc(value) + '</div>';
+  const photo = (src, label) => '<div class="report-photo-box"><div class="photo-label">' + label + '</div><div class="photo-image">' + (src ? '<img src="' + escapePrint(src) + '" alt="' + label + '">' : '<span class="no-photo">Kein Foto vorhanden</span>') + '</div></div>';
+  let html = '';
   let count = 0;
   for (let i = 1; i <= TOTAL_DOORS; i++) {
     const d = store.doors[i];
     if (!isDoorEdited(d)) continue;
     count++;
-    html += '<div class="print-door">';
-    html += '<div class="print-door-head"><span>Tür #' + pad3(i) + (d.bez ? ' – ' + d.bez : '') + (d.geschoss ? ' | ' + d.geschoss : '') + (d.raum ? ' | ' + d.raum : '') + '</span><span>Bewertung: ' + sevLabel(d.sev) + '</span></div>';
-    html += '<div class="print-cols"><div class="print-col-left">';
-    html += '<div><strong>Ausführung:</strong> ' + (d.blatt || '-') + ' | <strong>Zarge:</strong> ' + (d.zarge || '-') + '</div>';
-    html += '<table class="p-checks">';
-    CHECK_LABELS.forEach((lbl, idx) => {
-      html += '<tr><td>' + lbl + '</td><td style="font-weight:700;width:55px;">' + (d.checks[idx] || '-') + '</td></tr>';
+    const checks = Array.isArray(d.checks) ? d.checks : [];
+    const defects = Array.isArray(d.defects) ? d.defects : [];
+    html += '<section class="report-page"><div class="report-top">';
+    html += '<div class="report-title"><strong>WARTUNGSPROTOKOLL – INNENTÜREN</strong><small>Tür ' + pad3(i) + ' / ' + TOTAL_DOORS + '</small></div>';
+    html += '<div class="report-company">Tischlerei Höllerer GmbH · St.Leonhard 149 · 3572 St.Leonhard/Hw</div>';
+    html += '<div class="report-grid">';
+    html += field('Objekt / Baustelle', store.meta.objekt);
+    html += field('Prüfdatum', store.meta.datum);
+    html += field('Prüfer', store.meta.pruefer);
+    html += field('Prüferkürzel', d.by || store.meta.kuerzel);
+    html += field('Nächste Prüfung', store.meta.naechste);
+    html += field('Baustellen-Code', projectCode);
+    html += '</div>';
+    html += '<div class="report-section-title">1. TÜRDATEN – TÜR #' + pad3(i) + '</div><div class="report-grid">';
+    html += field('Tür-Nr. / Bezeichnung', d.bez);
+    html += field('Geschoss / Stiege', d.geschoss);
+    html += field('Raum / Top / Lage', d.raum);
+    html += field('Türblatt / Ausführung', d.blatt);
+    html += field('Zargenart', d.zarge);
+    html += '</div>';
+    html += '<div class="report-section"><div class="report-section-title">2. FUNKTIONS- UND SICHTPRÜFUNG</div><table class="report-checks"><tbody>';
+    CHECK_LABELS.forEach((label, idx) => {
+      const status = checks[idx] === 'OK' ? 'status-ok' : checks[idx] === 'Mgl.' ? 'status-mangel' : checks[idx] === 'n. v.' ? 'status-nv' : 'status-offen';
+      html += '<tr class="' + status + '"><td>' + escapePrint(label) + '</td><td>' + esc(checks[idx]) + '</td></tr>';
     });
-    html += '</table>';
-    if (d.defects && d.defects.length) {
-      html += '<div style="margin-top:4px;"><strong>Befund:</strong> ' + d.defects.join(', ') + '</div>';
-    }
-    if (d.bem) {
-      html += '<div style="margin-top:3px;"><strong>Bemerkung:</strong> ' + d.bem + '</div>';
-    }
-    html += '</div><div class="print-col-right">';
-    if (d.foto1) html += '<img src="' + d.foto1 + '">';
-    if (d.foto2) html += '<img src="' + d.foto2 + '">';
-    html += '</div></div></div>';
+    html += '</tbody></table></div>';
+    const ratingClass = ['keine', 'leicht', 'schwer', 'gefahr'].includes(d.sev) ? d.sev : 'offen';
+    html += '<div class="report-assessment-box"><div class="report-rating rating-' + ratingClass + '">3. GESAMTBEWERTUNG / MÄNGELSTUFE: ' + escapePrint(sevLabel(d.sev)) + '</div>';
+    html += '<div class="report-section"><div class="report-section-title">4. BEFUND UND BEMERKUNGEN</div>';
+    html += '<div class="report-notes"><b>Zargen- und Türschäden:</b> ' + esc(defects.join(', ')) + '</div>';
+    html += '<div class="report-notes"><b>Zusatz / Bemerkungen / Mängelbeschreibung:</b> ' + esc(d.bem) + '</div></div>';
+    html += '</div></div><div class="report-photos"><div class="report-photo-title">5. FOTODOKUMENTATION</div><div class="report-photo-grid">';
+    html += photo(d.foto1, 'FOTO 1 – Übersicht / Typenschild');
+    html += photo(d.foto2, 'FOTO 2 – Detail / Mangel');
+    html += '</div></div></section>';
   }
-  if (count === 0) {
-    html += '<p>Noch keine bearbeiteten Türen vorhanden.</p>';
-  }
+  if (!count) { alert('Noch keine bearbeiteten Türen vorhanden.'); return; }
   pa.innerHTML = html;
-  window.print();
+  // Die Bilder müssen vor Öffnen des Druckdialogs geladen sein.
+  const images = Array.from(pa.querySelectorAll('img'));
+  Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+    img.onload = resolve; img.onerror = resolve;
+  }))).then(() => {
+    window.print();
+  });
 }
 
 function exportCSV() {
@@ -962,7 +1016,13 @@ function restoreJSON(event) {
 }
 
 function clearProject() {
-  if (!confirm('Alle Daten für Baustellen-Code ' + projectCode + ' wirklich löschen?')) return;
+  const enteredCode = prompt('Sicherheitscode eingeben, um die Baustelle zu leeren:');
+  if (enteredCode === null) return;
+  if (enteredCode.trim() !== '2380') {
+    alert('Falscher Sicherheitscode. Die Baustelle wurde nicht gelöscht.');
+    return;
+  }
+  if (!confirm('ACHTUNG: Alle Daten für Baustellen-Code ' + projectCode + ' wirklich unwiderruflich löschen? Bitte vorher ein Backup sichern.')) return;
   store = {
     meta: { objekt: '', naechste: 'lt. Gesetzgeber (jährlich)', pruefer: '', kuerzel: '', datum: new Date().toISOString().slice(0, 10) },
     doors: {}
