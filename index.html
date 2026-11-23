@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wartungsprotokoll – Innentüren (Live)</title>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #eff6ff;
+    --accent: #ea580c;
+    --ok: #16a34a;
+    --ok-bg: #dcfce7;
+    --mgl: #ca8a04;
+    --mgl-bg: #fef9c3;
+    --nv: #4b5563;
+    --nv-bg: #f3f4f6;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+    --orange-bg: #ffedd5;
+    --border: #cbd5e1;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0 0 85px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.4;
+  }
+  header {
+    background: var(--primary); color: #fff; padding: 12px 14px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .header-title { font-weight: 800; font-size: 16px; letter-spacing: 0.3px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.16); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #facc15; }
+  .dot.online { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .toolbar button {
+    background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .toolbar button:active { background: rgba(255,255,255,0.3); }
+  .toolbar button.btn-danger-outline { border-color: #fca5a5; color: #fecaca; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+  .code-bar {
+    background: #dbeafe; border: 1.5px solid #93c5fd; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 12px; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .code-bar label { font-weight: 800; font-size: 12px; color: var(--primary); text-transform: uppercase; }
+  .code-bar input {
+    font-weight: 800; font-size: 15px; padding: 6px 10px; border-radius: 6px;
+    border: 1.5px solid var(--primary); width: 155px; text-transform: uppercase; background: #fff;
+  }
+  .code-hint { font-size: 12px; color: #1e40af; font-weight: 500; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid var(--primary-light); padding-bottom: 8px; margin-bottom: 12px;
+  }
+  .card-title { font-weight: 800; font-size: 14px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.4px; }
+  .badge-count {
+    background: var(--primary); color: #fff; font-size: 12px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(30,58,138,0.12);
+  }
+
+  .sub-label { font-size: 12px; font-weight: 800; color: var(--muted); margin: 12px 0 6px 0; text-transform: uppercase; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    border: 1.5px solid var(--border); background: #f8fafc; color: var(--text);
+    padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; user-select: none; transition: all 0.12s;
+  }
+  .chip.active {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+    box-shadow: 0 1px 3px rgba(30,58,138,0.25);
+  }
+  .chip.defect-chip.active {
+    background: var(--accent); color: #fff; border-color: #c2410c;
+  }
+
+  .btn-all-ok {
+    width: 100%; background: var(--ok); color: #fff; border: none; border-radius: 8px;
+    padding: 11px; font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(22,163,74,0.25);
+  }
+  .btn-all-ok:active { transform: scale(0.99); }
+
+  .check-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid #e2e8f0;
+  }
+  .check-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .check-text { font-size: 14px; font-weight: 600; flex: 1; }
+  .tri-group { display: flex; gap: 5px; flex-shrink: 0; }
+  .tri-btn {
+    border: 1.5px solid var(--border); background: #fff; color: var(--muted);
+    padding: 7px 11px; border-radius: 7px; font-size: 13px; font-weight: 800; cursor: pointer; min-width: 48px;
+  }
+  .tri-btn.ok.active { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .tri-btn.mgl.active { background: #eab308; color: #fff; border-color: #ca8a04; }
+  .tri-btn.nv.active { background: var(--nv); color: #fff; border-color: var(--nv); }
+
+  .sev-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .sev-grid { grid-template-columns: 1fr 1fr; } }
+  .sev-btn {
+    border: 2px solid var(--border); background: #fff; border-radius: 8px;
+    padding: 10px 8px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: center;
+  }
+  .sev-btn[data-val="keine"].active { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .sev-btn[data-val="leicht"].active { background: #eab308; color: #fff; border-color: #ca8a04; }
+  .sev-btn[data-val="schwer"].active { background: #ea580c; color: #fff; border-color: #c2410c; }
+  .sev-btn[data-val="gefahr"].active { background: var(--danger); color: #fff; border-color: #991b1b; }
+
+  .dictate-row { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px 0; }
+  .btn-mic {
+    background: #eff6ff; color: var(--primary); border: 1.5px solid #93c5fd;
+    border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .btn-mic.recording { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  @media (max-width: 520px) { .photo-grid { grid-template-columns: 1fr; } }
+  .photo-box {
+    border: 1.5px dashed #94a3b8; border-radius: 8px; padding: 10px; text-align: center; background: #f8fafc;
+  }
+  .photo-box-title { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 8px; }
+  .photo-actions { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
+  .btn-cam {
+    background: var(--primary); color: #fff; border: none; border-radius: 6px;
+    padding: 7px 11px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .btn-del-photo {
+    background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .photo-preview {
+    max-width: 100%; max-height: 150px; border-radius: 6px; display: none; margin: 0 auto; border: 1px solid var(--border);
+  }
+
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
+    border-top: 2px solid var(--border); padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; z-index: 90;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  }
+  .nav-btn {
+    background: var(--primary); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 16px; font-size: 14px; font-weight: 800; cursor: pointer; flex: 1; max-width: 160px;
+  }
+  .nav-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  .nav-center { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; }
+  .nav-center select {
+    padding: 7px 8px; font-size: 15px; font-weight: 800; border-radius: 7px; border: 1.5px solid var(--primary);
+  }
+
+  /* Modal Übersicht */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65);
+    z-index: 200; align-items: center; justify-content: center; padding: 12px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    background: #fff; border-radius: 12px; max-width: 780px; width: 100%; max-height: 88vh;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-head {
+    padding: 12px 16px; background: var(--primary); color: #fff;
+    display: flex; justify-content: space-between; align-items: center; font-weight: 800;
+  }
+  .modal-head button {
+    background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer;
+  }
+  .modal-legend {
+    padding: 8px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700;
+  }
+  .overview-grid {
+    padding: 12px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px;
+  }
+  .ov-tile {
+    border: 1.5px solid var(--border); border-radius: 7px; padding: 8px 4px; text-align: center;
+    font-weight: 800; font-size: 13px; cursor: pointer; background: #fff;
+  }
+  .ov-tile.current { outline: 3px solid var(--primary); }
+  .ov-tile.st-keine { background: var(--ok-bg); border-color: var(--ok); color: #14532d; }
+  .ov-tile.st-leicht { background: var(--mgl-bg); border-color: #ca8a04; color: #713f12; }
+  .ov-tile.st-schwer { background: var(--orange-bg); border-color: #ea580c; color: #7c2d12; }
+  .ov-tile.st-gefahr { background: var(--danger-bg); border-color: var(--danger); color: #7f1d1d; }
+  .ov-tile.st-done { background: #e0f2fe; border-color: #0284c7; color: #0c4a6e; }
+
+  /* Print Styles */
+  #printArea { display: none; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    header, .container, .nav-bar, .modal-backdrop { display: none !important; }
+    #printArea { display: block !important; font-size: 11pt; color: #000; }
+    .print-header { border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; }
+    .print-header h1 { margin: 0 0 4px 0; font-size: 16pt; color: #1e3a8a; }
+    .print-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 10pt; margin-bottom: 12px; }
+    .print-door { border: 1px solid #94a3b8; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; page-break-inside: avoid; }
+    .print-door-head { font-weight: 800; background: #eff6ff; padding: 4px 8px; margin: -8px -10px 6px -10px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
+    .print-cols { display: flex; gap: 12px; }
+    .print-col-left { width: 62%; }
+    .print-col-right { width: 38%; text-align: center; }
+    .print-col-right img { max-width: 100%; max-height: 110px; border: 1px solid #cbd5e1; margin-bottom: 4px; }
+    table.p-checks { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 4px; }
+    table.p-checks td { border-bottom: 1px solid #e2e8f0; padding: 2px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="header-title">WARTUNGSPROTOKOLL – INNENTÜREN (LIVE)</div>
+    <div class="status-pill"><span class="dot" id="connDot"></span><span id="connText">Starte lokal...</span></div>
+  </div>
+  <div class="toolbar">
+    <button type="button" onclick="openOverview()">Übersicht (1–160)</button>
+    <button type="button" onclick="printPDF()">Gesamt-PDF</button>
+    <button type="button" onclick="exportCSV()">Excel-Liste</button>
+    <button type="button" onclick="backupJSON()">Backup sichern</button>
+    <button type="button" onclick="document.getElementById('restoreInput').click()">Backup laden</button>
+    <button type="button" class="btn-danger-outline" onclick="clearProject()">Baustelle leeren</button>
+    <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreJSON(event)">
+  </div>
+</header>
+
+<div class="container">
+  <div class="code-bar">
+    <div>
+      <label for="projectCode">LIVE-BAUSTELLEN-CODE:</label><br>
+      <input type="text" id="projectCode" value="PROJ-260001" onchange="changeProjectCode(this.value)">
+    </div>
+    <div class="code-hint">Gleicher Code = alle Geräte live synchron (auch offline speicherbar)</div>
+  </div>
+
+  <!-- 1. PROJEKTDATEN -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">1. Projektdaten (Gilt für alle 160 Türen)</div>
+      <div class="badge-count" id="editedBadge">0 / 160 bearbeitet</div>
+    </div>
+    <div class="grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label for="metaObjekt">Objekt / Baustelle / Adresse</label>
+        <input type="text" id="metaObjekt" placeholder="z.B. Wohnanlage Wien 10, Stiege 1" oninput="saveMeta()">
+      </div>
+      <div class="field">
+        <label for="metaNaechste">Nächste Prüfung</label>
+        <input type="text" id="metaNaechste" list="naechsteList" value="lt. Gesetzgeber (jährlich)" placeholder="lt. Gesetzgeber (jährlich)" oninput="saveMeta()">
+        <datalist id="naechsteList">
+          <option value="lt. Gesetzgeber (jährlich)">
+          <option value="lt. Gesetzgeber (halbjährlich)">
+          <option value="lt. Gesetzgeber (alle 2 Jahre)">
+          <option value="lt. ÖNORM B 3850 (jährlich)">
+          <option value="lt. Herstellerangabe">
+        </datalist>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="field">
+        <label for="metaPruefer">Prüfer (Name)</label>
+        <input type="text" id="metaPruefer" placeholder="Vor- und Nachname" oninput="saveMeta()">
+      </div>
+      <div class="field">
+        <label for="metaKuerzel">Kürzel Prüfer</label>
+        <input type="text" id="metaKuerzel" placeholder="z.B. FH" maxlength="6" oninput="saveMeta()">
+      </div>
+      <div class="field">
+        <label for="metaDatum">Prüfdatum</label>
+        <input type="date" id="metaDatum" oninput="saveMeta()">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TÜR STAMMDATEN -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" id="doorCardTitle">2. Tür #001 von 160</div>
+    </div>
+    <div class="grid-3">
+      <div class="field">
+        <label for="dBez">Tür-Nr. / Bezeichnung</label>
+        <input type="text" id="dBez" placeholder="z.B. T-01 / Top 1" oninput="saveDoorField('bez', this.value)">
+      </div>
+      <div class="field">
+        <label for="dGeschoss">Geschoss / Stiege</label>
+        <select id="dGeschoss" onchange="saveDoorField('geschoss', this.value)">
+          <option value="">-- Geschoss wählen --</option>
+          <option value="UG 2">UG 2</option>
+          <option value="UG 1">UG 1</option>
+          <option value="KG">KG</option>
+          <option value="EG">EG</option>
+          <option value="HP">HP (Hochparterre)</option>
+          <option value="1. OG">1. OG</option>
+          <option value="2. OG">2. OG</option>
+          <option value="3. OG">3. OG</option>
+          <option value="4. OG">4. OG</option>
+          <option value="5. OG">5. OG</option>
+          <option value="6. OG">6. OG</option>
+          <option value="7. OG">7. OG</option>
+          <option value="8. OG">8. OG</option>
+          <option value="DG">DG (Dachgeschoss)</option>
+          <option value="DG 1">DG 1</option>
+          <option value="DG 2">DG 2</option>
+          <option value="Stiegenhaus">Stiegenhaus</option>
+          <option value="Technik / Dach">Technik / Dach</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dRaum">Raum / Top / Lage</label>
+        <input type="text" id="dRaum" placeholder="z.B. Eingang / Gang" oninput="saveDoorField('raum', this.value)">
+      </div>
+    </div>
+
+    <div class="sub-label">Türblatt / Ausführung</div>
+    <div class="chip-group" id="blattGroup">
+      <button type="button" class="chip" data-val="Holz / Röhrenspan" onclick="toggleSingleChip('blatt', this)">Holz / Röhrenspan</button>
+      <button type="button" class="chip" data-val="Stahl / Blech" onclick="toggleSingleChip('blatt', this)">Stahl / Blech</button>
+      <button type="button" class="chip" data-val="Alu / Glas" onclick="toggleSingleChip('blatt', this)">Alu / Glas</button>
+      <button type="button" class="chip" data-val="Brandschutz (EI30/EI90)" onclick="toggleSingleChip('blatt', this)">Brandschutz (EI30/EI90)</button>
+      <button type="button" class="chip" data-val="Schallschutz / Nassraum" onclick="toggleSingleChip('blatt', this)">Schallschutz / Nassraum</button>
+    </div>
+
+    <div class="sub-label">Zargenart</div>
+    <div class="chip-group" id="zargeGroup">
+      <button type="button" class="chip" data-val="Holz-Umfassungszarge" onclick="toggleSingleChip('zarge', this)">Holz-Umfassungszarge</button>
+      <button type="button" class="chip" data-val="Stahlzarge (Eck/Umfassung)" onclick="toggleSingleChip('zarge', this)">Stahlzarge (Eck/Umfassung)</button>
+      <button type="button" class="chip" data-val="Blockzarge / Blindstock" onclick="toggleSingleChip('zarge', this)">Blockzarge / Blindstock</button>
+      <button type="button" class="chip" data-val="Aluzarge" onclick="toggleSingleChip('zarge', this)">Aluzarge</button>
+      <button type="button" class="chip" data-val="Schiebetür-Kasten" onclick="toggleSingleChip('zarge', this)">Schiebetür-Kasten</button>
+    </div>
+  </div>
+
+  <!-- 3. FUNKTIONS- & SICHTPRÜFUNG -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">3. Funktions- & Sichtprüfung</div>
+    </div>
+    <button type="button" class="btn-all-ok" onclick="setAllChecksOK()">✓ ALLE 7 PUNKTE OK SETZEN</button>
+
+    <div id="checksContainer">
+      <div class="check-row" data-idx="0">
+        <div class="check-text">1. Türblatt & Zarge (Verzug, Schließspalt, Beschädigung)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(0, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(0, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(0, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="1">
+        <div class="check-text">2. Bänder / Scharniere (Fester Sitz, Schmierung, Verschleiß)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(1, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(1, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(1, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="2">
+        <div class="check-text">3. Schloss & Schließblech (Falle, Riegel, Leichtgängigkeit)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(2, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(2, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(2, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="3">
+        <div class="check-text">4. Türdrücker & Rosetten (Fester Sitz, Rückstellfeder)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(3, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(3, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(3, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="4">
+        <div class="check-text">5. Dichtungen (Vollständigkeit, Elastizität, Anpressdruck)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(4, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(4, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(4, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="5">
+        <div class="check-text">6. Türschließer / Feststeller (Schließgeschwindigkeit, Endschlag)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(5, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(5, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(5, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+      <div class="check-row" data-idx="6">
+        <div class="check-text">7. Bodenschwelle / Absenkdichtung (Dichtheit, Schleiffreiheit)</div>
+        <div class="tri-group">
+          <button type="button" class="tri-btn ok" onclick="setCheck(6, 'OK')">OK</button>
+          <button type="button" class="tri-btn mgl" onclick="setCheck(6, 'Mgl.')">Mgl.</button>
+          <button type="button" class="tri-btn nv" onclick="setCheck(6, 'n. v.')">n. v.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. GESAMTBEWERTUNG / MÄNGELSTUFE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">4. Gesamtbewertung / Mängelstufe</div>
+    </div>
+    <div class="sev-grid" id="sevGroup">
+      <button type="button" class="sev-btn" data-val="keine" onclick="setSeverity('keine')">Keine Mängel</button>
+      <button type="button" class="sev-btn" data-val="leicht" onclick="setSeverity('leicht')">Leichter Mangel</button>
+      <button type="button" class="sev-btn" data-val="schwer" onclick="setSeverity('schwer')">Schwerer Mangel</button>
+      <button type="button" class="sev-btn" data-val="gefahr" onclick="setSeverity('gefahr')">Gefahr in Verzug</button>
+    </div>
+  </div>
+
+  <!-- 5. BEFUND, ZUSATZ & FOTOS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">5. Befund, Zusatz & Fotos</div>
+    </div>
+    <div class="sub-label" style="margin-top:0;">Zargen- & Türschäden (Schnellauswahl)</div>
+    <div class="chip-group" id="defectsGroup">
+      <button type="button" class="chip defect-chip" data-val="Zarge verzogen / lose" onclick="toggleDefect(this)">Zarge verzogen / lose</button>
+      <button type="button" class="chip defect-chip" data-val="Türblatt streift" onclick="toggleDefect(this)">Türblatt streift</button>
+      <button type="button" class="chip defect-chip" data-val="Dichtung porös / fehlt" onclick="toggleDefect(this)">Dichtung porös / fehlt</button>
+      <button type="button" class="chip defect-chip" data-val="Schloss / Drücker klemmt" onclick="toggleDefect(this)">Schloss / Drücker klemmt</button>
+      <button type="button" class="chip defect-chip" data-val="Schließer defekt" onclick="toggleDefect(this)">Schließer defekt</button>
+      <button type="button" class="chip defect-chip" data-val="Feuchteschaden unten" onclick="toggleDefect(this)">Feuchteschaden unten</button>
+      <button type="button" class="chip defect-chip" data-val="Zarge Lackschäden" onclick="toggleDefect(this)">Zarge Lackschäden</button>
+      <button type="button" class="chip defect-chip" data-val="Zarge zerkratzt" onclick="toggleDefect(this)">Zarge zerkratzt</button>
+      <button type="button" class="chip defect-chip" data-val="Stanzung Schloss ausgerissen" onclick="toggleDefect(this)">Stanzung Schloss ausgerissen</button>
+      <button type="button" class="chip defect-chip" data-val="Schichtstoff abgeplatzt" onclick="toggleDefect(this)">Schichtstoff abgeplatzt</button>
+    </div>
+
+    <div class="dictate-row">
+      <label for="dBemerkung" style="font-size:12px; font-weight:700; color:var(--muted);">Zusatz / Bemerkungen / Mängelbeschreibung</label>
+      <button type="button" class="btn-mic" id="micBtn" onclick="startDictation()">🎤 Mikrofon Diktat</button>
+    </div>
+    <div class="field">
+      <textarea id="dBemerkung" rows="3" placeholder="Freitext oder Diktat..." oninput="saveDoorField('bem', this.value)"></textarea>
+    </div>
+
+    <div class="photo-grid">
+      <div class="photo-box">
+        <div class="photo-box-title">FOTO 1 (Übersicht / Typenschild)</div>
+        <div class="photo-actions">
+          <button type="button" class="btn-cam" onclick="document.getElementById('cam1').click()">📷 Kamera / Foto</button>
+          <button type="button" class="btn-del-photo" onclick="removePhoto(1)">Löschen</button>
+        </div>
+        <input type="file" id="cam1" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(1, event)">
+        <img id="prev1" class="photo-preview" alt="Foto 1">
+      </div>
+      <div class="photo-box">
+        <div class="photo-box-title">FOTO 2 (Detail / Mangel)</div>
+        <div class="photo-actions">
+          <button type="button" class="btn-cam" onclick="document.getElementById('cam2').click()">📷 Kamera / Foto</button>
+          <button type="button" class="btn-del-photo" onclick="removePhoto(2)">Löschen</button>
+        </div>
+        <input type="file" id="cam2" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(2, event)">
+        <img id="prev2" class="photo-preview" alt="Foto 2">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UNTERE NAVIGATION -->
+<div class="nav-bar">
+  <button type="button" class="nav-btn" id="btnPrev" onclick="switchDoor(currentDoor - 1)">◀ Vorherige</button>
+  <div class="nav-center">
+    <span>#</span>
+    <select id="doorSelect" onchange="switchDoor(parseInt(this.value, 10))"></select>
+    <span>/ 160</span>
+  </div>
+  <button type="button" class="nav-btn" id="btnNext" onclick="switchDoor(currentDoor + 1)">Nächste Tür ▶</button>
+</div>
+
+<!-- SCHNELLÜBERSICHT MODAL -->
+<div class="modal-backdrop" id="overviewModal" onclick="if(event.target===this) closeOverview()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span>SCHNELLÜBERSICHT (1–160)</span>
+      <button type="button" onclick="closeOverview()">Schließen</button>
+    </div>
+    <div class="modal-legend">
+      Grün = Keine Mängel | Gelb = Leichter Mangel | Orange = Schwerer Mangel | Rot = Gefahr in Verzug
+    </div>
+    <div class="overview-grid" id="overviewGrid"></div>
+  </div>
+</div>
+
+<!-- DRUCKBEREICH -->
+<div id="printArea"></div>
+
+<script>
+const TOTAL_DOORS = 160;
+const CHECK_LABELS = [
+  "1. Türblatt & Zarge (Verzug, Schließspalt, Beschädigung)",
+  "2. Bänder / Scharniere (Fester Sitz, Schmierung, Verschleiß)",
+  "3. Schloss & Schließblech (Falle, Riegel, Leichtgängigkeit)",
+  "4. Türdrücker & Rosetten (Fester Sitz, Rückstellfeder)",
+  "5. Dichtungen (Vollständigkeit, Elastizität, Anpressdruck)",
+  "6. Türschließer / Feststeller (Schließgeschwindigkeit, Endschlag)",
+  "7. Bodenschwelle / Absenkdichtung (Dichtheit, Schleiffreiheit)"
+];
+
+let currentDoor = 1;
+let projectCode = localStorage.getItem('tueren_active_code') || 'PROJ-260001';
+let store = {
+  meta: {
+    objekt: '',
+    naechste: 'lt. Gesetzgeber (jährlich)',
+    pruefer: '',
+    kuerzel: '',
+    datum: new Date().toISOString().slice(0, 10)
+  },
+  doors: {}
+};
+
+let fbDb = null;
+let fbRef = null;
+let ignoreRemote = false;
+
+function storageKey() {
+  return 'tueren_live_data_' + projectCode;
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      store.meta = Object.assign({
+        objekt: '',
+        naechste: 'lt. Gesetzgeber (jährlich)',
+        pruefer: '',
+        kuerzel: '',
+        datum: new Date().toISOString().slice(0, 10)
+      }, parsed.meta || {});
+      store.doors = parsed.doors || {};
+    } else {
+      store = {
+        meta: {
+          objekt: '',
+          naechste: 'lt. Gesetzgeber (jährlich)',
+          pruefer: '',
+          kuerzel: '',
+          datum: new Date().toISOString().slice(0, 10)
+        },
+        doors: {}
+      };
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function persistLocal() {
+  try {
+    localStorage.setItem(storageKey(), JSON.stringify(store));
+  } catch (e) {
+    alert('Lokaler Speicher voll – bitte Backup sichern oder Fotos verkleinern.');
+  }
+}
+
+function syncToCloud(pathSuffix, value) {
+  persistLocal();
+  updateEditedBadge();
+  if (fbDb) {
+    try {
+      ignoreRemote = true;
+      fbDb.ref('projects/' + projectCode + '/' + pathSuffix).set(value, function() {
+        setTimeout(function() { ignoreRemote = false; }, 150);
+      });
+    } catch (e) {
+      ignoreRemote = false;
+    }
+  }
+}
+
+function getDoor(num) {
+  if (!store.doors[num]) {
+    store.doors[num] = {
+      bez: '', geschoss: '', raum: '',
+      blatt: '', zarge: '',
+      checks: ['', '', '', '', '', '', ''],
+      sev: '',
+      defects: [],
+      bem: '',
+      foto1: '', foto2: '',
+      by: ''
+    };
+  }
+  const d = store.doors[num];
+  if (!Array.isArray(d.checks)) d.checks = ['', '', '', '', '', '', ''];
+  if (!Array.isArray(d.defects)) d.defects = [];
+  return d;
+}
+
+function isDoorEdited(d) {
+  if (!d) return false;
+  if (d.bez || d.geschoss || d.raum || d.blatt || d.zarge || d.sev || d.bem || d.foto1 || d.foto2) return true;
+  if (Array.isArray(d.checks) && d.checks.some(c => c !== '')) return true;
+  if (Array.isArray(d.defects) && d.defects.length > 0) return true;
+  return false;
+}
+
+function updateEditedBadge() {
+  let count = 0;
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    if (isDoorEdited(store.doors[i])) count++;
+  }
+  document.getElementById('editedBadge').textContent = count + ' / 160 bearbeitet';
+}
+
+function renderMeta() {
+  document.getElementById('metaObjekt').value = store.meta.objekt || '';
+  document.getElementById('metaNaechste').value = store.meta.naechste || 'lt. Gesetzgeber (jährlich)';
+  document.getElementById('metaPruefer').value = store.meta.pruefer || '';
+  document.getElementById('metaKuerzel').value = store.meta.kuerzel || '';
+  document.getElementById('metaDatum').value = store.meta.datum || '';
+}
+
+function saveMeta() {
+  store.meta.objekt = document.getElementById('metaObjekt').value;
+  store.meta.naechste = document.getElementById('metaNaechste').value;
+  store.meta.pruefer = document.getElementById('metaPruefer').value;
+  store.meta.kuerzel = document.getElementById('metaKuerzel').value;
+  store.meta.datum = document.getElementById('metaDatum').value;
+  syncToCloud('meta', store.meta);
+}
+
+function pad3(n) {
+  return String(n).padStart(3, '0');
+}
+
+function renderDoor() {
+  const d = getDoor(currentDoor);
+  document.getElementById('doorCardTitle').textContent = '2. Tür #' + pad3(currentDoor) + ' von 160';
+  document.getElementById('doorSelect').value = String(currentDoor);
+  document.getElementById('btnPrev').disabled = (currentDoor <= 1);
+  document.getElementById('btnNext').disabled = (currentDoor >= TOTAL_DOORS);
+
+  document.getElementById('dBez').value = d.bez || '';
+  document.getElementById('dGeschoss').value = d.geschoss || '';
+  document.getElementById('dRaum').value = d.raum || '';
+  document.getElementById('dBemerkung').value = d.bem || '';
+
+  // Türblatt Chips
+  document.querySelectorAll('#blattGroup .chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === d.blatt);
+  });
+  // Zargenart Chips
+  document.querySelectorAll('#zargeGroup .chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === d.zarge);
+  });
+
+  // 7 Prüfpunkte
+  document.querySelectorAll('#checksContainer .check-row').forEach(row => {
+    const idx = parseInt(row.dataset.idx, 10);
+    const val = d.checks[idx] || '';
+    row.querySelectorAll('.tri-btn').forEach(b => {
+      const target = b.classList.contains('ok') ? 'OK' : (b.classList.contains('mgl') ? 'Mgl.' : 'n. v.');
+      b.classList.toggle('active', val === target);
+    });
+  });
+
+  // Gesamtbewertung
+  document.querySelectorAll('#sevGroup .sev-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === d.sev);
+  });
+
+  // Befund Chips
+  document.querySelectorAll('#defectsGroup .chip').forEach(btn => {
+    btn.classList.toggle('active', d.defects.includes(btn.dataset.val));
+  });
+
+  // Fotos
+  const p1 = document.getElementById('prev1');
+  if (d.foto1) { p1.src = d.foto1; p1.style.display = 'block'; } else { p1.src = ''; p1.style.display = 'none'; }
+  const p2 = document.getElementById('prev2');
+  if (d.foto2) { p2.src = d.foto2; p2.style.display = 'block'; } else { p2.src = ''; p2.style.display = 'none'; }
+
+  updateEditedBadge();
+}
+
+function saveDoorField(key, val) {
+  const d = getDoor(currentDoor);
+  d[key] = val;
+  d.by = store.meta.kuerzel || '';
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function toggleSingleChip(field, btn) {
+  const d = getDoor(currentDoor);
+  const val = btn.dataset.val;
+  d[field] = (d[field] === val) ? '' : val;
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function setCheck(idx, val) {
+  const d = getDoor(currentDoor);
+  d.checks[idx] = (d.checks[idx] === val) ? '' : val;
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function setAllChecksOK() {
+  const d = getDoor(currentDoor);
+  d.checks = ['OK', 'OK', 'OK', 'OK', 'OK', 'OK', 'OK'];
+  if (!d.sev) d.sev = 'keine';
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function setSeverity(val) {
+  const d = getDoor(currentDoor);
+  d.sev = (d.sev === val) ? '' : val;
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function toggleDefect(btn) {
+  const d = getDoor(currentDoor);
+  const val = btn.dataset.val;
+  const i = d.defects.indexOf(val);
+  if (i >= 0) d.defects.splice(i, 1);
+  else d.defects.push(val);
+  d.by = store.meta.kuerzel || '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function switchDoor(target) {
+  if (target < 1) target = 1;
+  if (target > TOTAL_DOORS) target = TOTAL_DOORS;
+  currentDoor = target;
+  renderDoor();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handlePhoto(slot, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 800;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      const d = getDoor(currentDoor);
+      d['foto' + slot] = dataUrl;
+      d.by = store.meta.kuerzel || '';
+      renderDoor();
+      syncToCloud('doors/' + currentDoor, d);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function removePhoto(slot) {
+  const d = getDoor(currentDoor);
+  d['foto' + slot] = '';
+  renderDoor();
+  syncToCloud('doors/' + currentDoor, d);
+}
+
+function startDictation() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    alert('Spracherkennung wird von diesem Browser nicht direkt unterstützt – nutze bitte das Mikrofon-Symbol auf deiner Handy-Tastatur.');
+    return;
+  }
+  const rec = new SpeechRec();
+  rec.lang = 'de-AT';
+  const btn = document.getElementById('micBtn');
+  btn.classList.add('recording');
+  btn.textContent = '🔴 Sprich jetzt...';
+  rec.onresult = function(e) {
+    const txt = e.results[0][0].transcript;
+    const area = document.getElementById('dBemerkung');
+    area.value = area.value ? (area.value + ' ' + txt) : txt;
+    saveDoorField('bem', area.value);
+  };
+  rec.onend = function() {
+    btn.classList.remove('recording');
+    btn.textContent = '🎤 Mikrofon Diktat';
+  };
+  rec.start();
+}
+
+function openOverview() {
+  const grid = document.getElementById('overviewGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    const d = store.doors[i];
+    const tile = document.createElement('div');
+    tile.className = 'ov-tile' + (i === currentDoor ? ' current' : '');
+    if (d) {
+      if (d.sev === 'keine') tile.classList.add('st-keine');
+      else if (d.sev === 'leicht') tile.classList.add('st-leicht');
+      else if (d.sev === 'schwer') tile.classList.add('st-schwer');
+      else if (d.sev === 'gefahr') tile.classList.add('st-gefahr');
+      else if (isDoorEdited(d)) tile.classList.add('st-done');
+    }
+    tile.innerHTML = pad3(i) + (d && d.by ? '<div style="font-size:10px;font-weight:600;">' + d.by + '</div>' : '');
+    tile.onclick = function() {
+      closeOverview();
+      switchDoor(i);
+    };
+    grid.appendChild(tile);
+  }
+  document.getElementById('overviewModal').classList.add('open');
+}
+
+function closeOverview() {
+  document.getElementById('overviewModal').classList.remove('open');
+}
+
+function sevLabel(s) {
+  if (s === 'keine') return 'Keine Mängel';
+  if (s === 'leicht') return 'Leichter Mangel';
+  if (s === 'schwer') return 'Schwerer Mangel';
+  if (s === 'gefahr') return 'GEFAHR IN VERZUG';
+  return '-';
+}
+
+function printPDF() {
+  const pa = document.getElementById('printArea');
+  let html = '<div class="print-header"><h1>WARTUNGSPROTOKOLL – INNENTÜREN (' + projectCode + ')</h1></div>';
+  html += '<div class="print-meta">';
+  html += '<div><strong>Objekt / Baustelle:</strong> ' + (store.meta.objekt || '-') + '</div>';
+  html += '<div><strong>Prüfdatum:</strong> ' + (store.meta.datum || '-') + '</div>';
+  html += '<div><strong>Prüfer:</strong> ' + (store.meta.pruefer || '-') + ' (' + (store.meta.kuerzel || '-') + ')</div>';
+  html += '<div><strong>Nächste Prüfung:</strong> ' + (store.meta.naechste || '-') + '</div>';
+  html += '</div>';
+
+  let count = 0;
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    const d = store.doors[i];
+    if (!isDoorEdited(d)) continue;
+    count++;
+    html += '<div class="print-door">';
+    html += '<div class="print-door-head"><span>Tür #' + pad3(i) + (d.bez ? ' – ' + d.bez : '') + (d.geschoss ? ' | ' + d.geschoss : '') + (d.raum ? ' | ' + d.raum : '') + '</span><span>Bewertung: ' + sevLabel(d.sev) + '</span></div>';
+    html += '<div class="print-cols"><div class="print-col-left">';
+    html += '<div><strong>Ausführung:</strong> ' + (d.blatt || '-') + ' | <strong>Zarge:</strong> ' + (d.zarge || '-') + '</div>';
+    html += '<table class="p-checks">';
+    CHECK_LABELS.forEach((lbl, idx) => {
+      html += '<tr><td>' + lbl + '</td><td style="font-weight:700;width:55px;">' + (d.checks[idx] || '-') + '</td></tr>';
+    });
+    html += '</table>';
+    if (d.defects && d.defects.length) {
+      html += '<div style="margin-top:4px;"><strong>Befund:</strong> ' + d.defects.join(', ') + '</div>';
+    }
+    if (d.bem) {
+      html += '<div style="margin-top:3px;"><strong>Bemerkung:</strong> ' + d.bem + '</div>';
+    }
+    html += '</div><div class="print-col-right">';
+    if (d.foto1) html += '<img src="' + d.foto1 + '">';
+    if (d.foto2) html += '<img src="' + d.foto2 + '">';
+    html += '</div></div></div>';
+  }
+  if (count === 0) {
+    html += '<p>Noch keine bearbeiteten Türen vorhanden.</p>';
+  }
+  pa.innerHTML = html;
+  window.print();
+}
+
+function exportCSV() {
+  const rows = [
+    ['Nr', 'Bezeichnung', 'Geschoss', 'Raum', 'Türblatt', 'Zarge', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'Gesamtbewertung', 'Befund', 'Bemerkung', 'Prüfer']
+  ];
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    const d = store.doors[i];
+    if (!isDoorEdited(d)) continue;
+    rows.push([
+      pad3(i), d.bez || '', d.geschoss || '', d.raum || '', d.blatt || '', d.zarge || '',
+      d.checks[0] || '', d.checks[1] || '', d.checks[2] || '', d.checks[3] || '', d.checks[4] || '', d.checks[5] || '', d.checks[6] || '',
+      sevLabel(d.sev), (d.defects || []).join('; '), (d.bem || '').replace(/\n/g, ' '), d.by || store.meta.kuerzel || ''
+    ]);
+  }
+  const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Tueren_Wartung_' + projectCode + '.csv';
+  a.click();
+}
+
+function backupJSON() {
+  const blob = new Blob([JSON.stringify({ projectCode, store }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Backup_Tueren_' + projectCode + '.json';
+  a.click();
+}
+
+function restoreJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed.store) {
+        store = parsed.store;
+        persistLocal();
+        if (fbDb) fbDb.ref('projects/' + projectCode).set(store);
+        renderMeta();
+        renderDoor();
+        alert('Backup erfolgreich geladen!');
+      }
+    } catch (err) {
+      alert('Ungültige Backup-Datei.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearProject() {
+  if (!confirm('Alle Daten für Baustellen-Code ' + projectCode + ' wirklich löschen?')) return;
+  store = {
+    meta: { objekt: '', naechste: 'lt. Gesetzgeber (jährlich)', pruefer: '', kuerzel: '', datum: new Date().toISOString().slice(0, 10) },
+    doors: {}
+  };
+  persistLocal();
+  if (fbDb) fbDb.ref('projects/' + projectCode).remove();
+  renderMeta();
+  renderDoor();
+}
+
+function changeProjectCode(val) {
+  const clean = (val || '').trim().toUpperCase() || 'PROJ-260001';
+  projectCode = clean;
+  document.getElementById('projectCode').value = projectCode;
+  localStorage.setItem('tueren_active_code', projectCode);
+  loadLocal();
+  renderMeta();
+  renderDoor();
+  attachFirebaseListener();
+}
+
+function attachFirebaseListener() {
+  if (!fbDb) return;
+  if (fbRef) fbRef.off();
+  fbRef = fbDb.ref('projects/' + projectCode);
+  fbRef.on('value', function(snap) {
+    if (ignoreRemote) return;
+    const val = snap.val();
+    if (val) {
+      if (val.meta) store.meta = Object.assign(store.meta, val.meta);
+      if (val.doors) {
+        Object.keys(val.doors).forEach(k => {
+          const item = val.doors[k];
+          if (item) {
+            if (!Array.isArray(item.checks)) item.checks = ['', '', '', '', '', '', ''];
+            if (!Array.isArray(item.defects)) item.defects = [];
+            store.doors[k] = item;
+          }
+        });
+      }
+      persistLocal();
+      renderMeta();
+      renderDoor();
+    }
+  });
+}
+
+function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    document.getElementById('connDot').classList.remove('online');
+    document.getElementById('connText').textContent = 'Offline-Modus (speichert lokal)';
+    return;
+  }
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd_t3mEwgw26xA_dwNvDjD6BSNyyo5NFM",
+      authDomain: "wartung-wien.firebaseapp.com",
+      databaseURL: "https://wartung-wien-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "wartung-wien",
+      storageBucket: "wartung-wien.firebasestorage.app",
+      messagingSenderId: "974320255905",
+      appId: "1:974320255905:web:82d550295ff2b0adf581e0"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    fbDb = firebase.database();
+    fbDb.ref('.info/connected').on('value', function(s) {
+      const online = !!s.val();
+      document.getElementById('connDot').classList.toggle('online', online);
+      document.getElementById('connText').textContent = online ? 'Live verbunden' : 'Offline-Modus (speichert lokal)';
+    });
+    attachFirebaseListener();
+  } catch (e) {
+    document.getElementById('connText').textContent = 'Offline-Modus (speichert lokal)';
+  }
+}
+
+// Initialisierung sofort beim Laden (0ms Verzögerung)
+(function boot() {
+  const sel = document.getElementById('doorSelect');
+  for (let i = 1; i <= TOTAL_DOORS; i++) {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = pad3(i);
+    sel.appendChild(opt);
+  }
+  document.getElementById('projectCode').value = projectCode;
+  loadLocal();
+  renderMeta();
+  renderDoor();
+
+  // Firebase asynchron nachladen, damit Offline-Start niemals blockiert
+  const s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+  s1.onload = function() {
+    const s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+    s2.onload = initFirebase;
+    document.head.appendChild(s2);
+  };
+  s1.onerror = function() {
+    document.getElementById('connText').textContent = 'Offline-Modus (speichert lokal)';
+  };
+  document.head.appendChild(s1);
+})();
+</script>
+</body>
+</html>
