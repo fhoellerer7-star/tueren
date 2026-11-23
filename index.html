@@ -256,6 +256,7 @@
     .report-photo-box .photo-image { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .report-photo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
     .report-photo-box .no-photo { color: #94a3b8; font-style: italic; }
+    .report-repair-open { margin-top: 5px; padding: 4px 6px; background: #fee2e2 !important; color: #991b1b; font-weight: 800; border: 1px solid #fca5a5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .report-repair-done { margin-top: 5px; padding: 4px 6px; background: #dcfce7 !important; color: #166534; font-weight: 800; border: 1px solid #86efac; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .defect-list-page { width: 210mm; min-height: 297mm; padding: 12mm 11mm; break-after: page; page-break-after: always; font: 9pt/1.35 Arial, sans-serif; color: #142033; }
     .defect-list-page:last-child { break-after: auto; page-break-after: auto; }
@@ -765,7 +766,7 @@ function renderDoor() {
 
   document.getElementById('dRepairDone').checked = d.repairDone === true;
   document.getElementById('doorRepairHint').textContent = d.repairDone
-    ? '✓ Reparatur erledigt am ' + (d.repairDate || 'Datum nicht erfasst') + '. Der ursprüngliche Mangel bleibt dokumentiert.'
+    ? '✓ Wartungsreparatur erledigt am ' + (d.repairDate || 'Datum nicht erfasst') + '. Ausgewählte Zargen- und Türschäden bleiben ausdrücklich NICHT BEHOBEN.'
     : 'Bei sofortiger Behebung anhaken. Die ursprüngliche Mängelbewertung bleibt erhalten.';
 
   // Befund Chips
@@ -987,10 +988,11 @@ function printPDF() {
     html += '</tbody></table></div>';
     const ratingClass = ['keine', 'leicht', 'schwer', 'gefahr'].includes(d.sev) ? d.sev : 'offen';
     html += '<div class="report-assessment-box"><div class="report-rating rating-' + ratingClass + '">3. GESAMTBEWERTUNG / MÄNGELSTUFE: ' + escapePrint(sevLabel(d.sev)) + '</div>';
+    if (d.repairDone) html += '<div class="report-repair-done">✓ DIESE MÄNGEL WURDEN IM ZUGE DER WARTUNG BEHOBEN' + (d.repairDate ? ' · ' + esc(d.repairDate) : '') + '</div>';
     html += '<div class="report-section"><div class="report-section-title">4. BEFUND UND BEMERKUNGEN</div>';
     html += '<div class="report-notes"><b>Zargen- und Türschäden:</b> ' + esc(defects.join(', ')) + '</div>';
     html += '<div class="report-notes"><b>Zusatz / Bemerkungen / Mängelbeschreibung:</b> ' + esc(d.bem) + '</div>';
-    if (d.repairDone) html += '<div class="report-repair-done">✓ MANGEL IM ZUGE DER WARTUNG BEHOBEN' + (d.repairDate ? ' · ' + esc(d.repairDate) : '') + '</div>';
+    if (defects.length) html += '<div class="report-repair-open">✕ ZARGEN- / TÜRSCHÄDEN NICHT BEHOBEN – WEITERE INSTANDSETZUNG ERFORDERLICH</div>';
     html += '</div>';
     html += '</div></div><div class="report-photos"><div class="report-photo-title">5. FOTODOKUMENTATION</div><div class="report-photo-grid">';
     html += photo(d.foto1, 'FOTO 1 – Übersicht / Typenschild');
@@ -1018,12 +1020,14 @@ function printDoorDefectsList(onlyOpen) {
     const checks = Array.isArray(d.checks) ? d.checks : [];
     const defects = Array.isArray(d.defects) ? d.defects : [];
     const hasMangel = checks.includes('Mgl.') || defects.length > 0 || ['leicht','schwer','gefahr'].includes(d.sev);
-    if (!hasMangel || (onlyOpen && d.repairDone === true)) continue;
+    // Schnellauswahl-Schäden bleiben offen, auch wenn eine Wartungsreparatur erledigt wurde.
+    const stillOpen = defects.length > 0 || d.repairDone !== true;
+    if (!hasMangel || (onlyOpen && !stillOpen)) continue;
     const parts = [];
     checks.forEach((v, j) => { if (v === 'Mgl.') parts.push(CHECK_LABELS[j]); });
     if (defects.length) parts.push('Schäden: ' + defects.join(', '));
     if (d.bem) parts.push('Bemerkung: ' + d.bem);
-    matches.push({i, d, description: parts.join('\n') || 'Mangel festgestellt (ohne Beschreibung)'});
+    matches.push({i, d, stillOpen, description: parts.join('\n') || 'Mangel festgestellt (ohne Beschreibung)'});
   }
   if (!matches.length) {
     alert(onlyOpen ? 'Für diese Baustelle sind keine offenen Reparaturen erfasst.' : 'Für diese Baustelle sind keine Türen mit Mängeln erfasst.');
@@ -1031,14 +1035,16 @@ function printDoorDefectsList(onlyOpen) {
   }
   const e = escapePrint;
   const title = onlyOpen ? 'OFFENE REPARATUREN – INNENTÜREN' : 'MÄNGELLISTE – INNENTÜREN';
-  const done = matches.filter(m => m.d.repairDone === true).length;
+  const done = matches.filter(m => !m.stillOpen).length;
   let rows = '';
-  matches.forEach(({i,d,description}) => {
+  matches.forEach(({i,d,stillOpen,description}) => {
     const cls = ['leicht','schwer','gefahr'].includes(d.sev) ? d.sev : '';
     const level = d.sev && d.sev !== 'keine' ? sevLabel(d.sev) : 'Mangel (ohne Stufe)';
-    const repair = d.repairDone
-      ? '<span class="repair-state-done">✓ BEHOBEN' + (d.repairDate ? ' am ' + e(d.repairDate) : '') + '</span>'
-      : '<span class="repair-state-open">○ OFFEN</span>';
+    const defects = Array.isArray(d.defects) ? d.defects : [];
+    const repair = (d.repairDone
+      ? '<span class="repair-state-done">✓ Wartungsreparatur erledigt' + (d.repairDate ? ' am ' + e(d.repairDate) : '') + '</span>'
+      : '<span class="repair-state-open">○ Wartungsreparatur offen</span>') +
+      (defects.length ? '<div class="repair-state-open">✕ Zargen- / Türschäden NICHT BEHOBEN – weitere Instandsetzung erforderlich</div>' : '');
     rows += '<tr><td><b>#' + pad3(i) + '</b><div>' + e(d.bez || '') + '</div></td>' +
       '<td>' + e([d.geschoss,d.raum].filter(Boolean).join(' / ') || '-') + '</td>' +
       '<td><span class="defect-level ' + cls + '">' + e(level) + '</span></td>' +
@@ -1058,7 +1064,7 @@ function printDoorDefectsList(onlyOpen) {
 
 function exportCSV() {
   const rows = [
-    ['Nr', 'Bezeichnung', 'Geschoss', 'Raum', 'Türblatt', 'Zarge', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'Gesamtbewertung', 'Befund', 'Bemerkung', 'Prüfer', 'Reparatur erledigt', 'Reparaturdatum']
+    ['Nr', 'Bezeichnung', 'Geschoss', 'Raum', 'Türblatt', 'Zarge', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'Gesamtbewertung', 'Befund', 'Bemerkung', 'Prüfer', 'Reparatur erledigt', 'Reparaturdatum', 'Zargen-/Türschäden offen']
   ];
   for (let i = 1; i <= TOTAL_DOORS; i++) {
     const d = store.doors[i];
@@ -1066,7 +1072,7 @@ function exportCSV() {
     rows.push([
       pad3(i), d.bez || '', d.geschoss || '', d.raum || '', d.blatt || '', d.zarge || '',
       d.checks[0] || '', d.checks[1] || '', d.checks[2] || '', d.checks[3] || '', d.checks[4] || '', d.checks[5] || '', d.checks[6] || '',
-      sevLabel(d.sev), (d.defects || []).join('; '), (d.bem || '').replace(/\n/g, ' '), d.by || store.meta.kuerzel || '', d.repairDone ? 'Ja' : 'Nein', d.repairDone ? (d.repairDate || '') : ''
+      sevLabel(d.sev), (d.defects || []).join('; '), (d.bem || '').replace(/\n/g, ' '), d.by || store.meta.kuerzel || '', d.repairDone ? 'Ja' : 'Nein', d.repairDone ? (d.repairDate || '') : '', (d.defects || []).length ? 'Ja – nicht behoben' : 'Nein'
     ]);
   }
   const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
