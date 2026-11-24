@@ -586,6 +586,13 @@
 <div id="printArea"></div>
 
 <script>
+function pdfPruefmonat(value) {
+  const match = /^(\d{4})-(0[1-9]|1[0-2])(?:-\d{2})?$/.exec(value || '');
+  if (!match) return value || '–';
+  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  return months[Number(match[2])-1] + ' ' + match[1];
+}
+
 const TOTAL_DOORS = 160;
 const CHECK_LABELS = [
   "1. Türblatt & Zarge (Verzug, Schließspalt, Beschädigung)",
@@ -967,7 +974,7 @@ function printPDF() {
     html += '<div class="report-company">Tischlerei Höllerer GmbH · St.Leonhard 149 · 3572 St.Leonhard/Hw</div>';
     html += '<div class="report-grid">';
     html += field('Objekt / Baustelle', store.meta.objekt);
-    html += field('Prüfdatum', store.meta.datum);
+    html += field('Prüfdatum', pdfPruefmonat(store.meta.datum));
     html += field('Prüfer', store.meta.pruefer);
     html += field('Prüferkürzel', d.by || store.meta.kuerzel);
     html += field('Nächste Prüfung', store.meta.naechste);
@@ -1053,7 +1060,7 @@ function printDoorDefectsList(onlyOpen) {
   const html = '<section class="defect-list-page"><div class="defect-list-title">' + title + '</div>' +
     '<div class="defect-list-company">Tischlerei Höllerer GmbH · St.Leonhard 149 · 3572 St.Leonhard/Hw</div>' +
     '<div class="defect-list-info"><b>Objekt / Baustelle:</b> ' + e(store.meta.objekt || '-') +
-    '<br><b>Prüfdatum:</b> ' + e(store.meta.datum || '-') +
+    '<br><b>Prüfdatum:</b> ' + e(pdfPruefmonat(store.meta.datum)) +
     ' &nbsp; <b>Prüfer:</b> ' + e(store.meta.pruefer || '-') +
     '<br><b>Baustellen-Code:</b> ' + e(projectCode) +
     '<br><b>Zusammenfassung:</b> ' + matches.length + (onlyOpen ? ' offene Reparaturen' : ' Türen mit Mängeln (' + done + ' behoben, ' + (matches.length-done) + ' offen)') + '</div>' +
