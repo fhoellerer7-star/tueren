@@ -970,7 +970,7 @@ function printPDF() {
     const checks = Array.isArray(d.checks) ? d.checks : [];
     const defects = Array.isArray(d.defects) ? d.defects : [];
     html += '<section class="report-page"><div class="report-top">';
-    html += '<div class="report-title"><strong>WARTUNGSPROTOKOLL – INNENTÜREN</strong><small>Tür ' + pad3(i) + ' / ' + TOTAL_DOORS + '</small></div>';
+    html += '<div class="report-title"><strong>WARTUNGSPROTOKOLL – INNENTÜREN</strong></div>';
     html += '<div class="report-company">Tischlerei Höllerer GmbH · St.Leonhard 149 · 3572 St.Leonhard/Hw</div>';
     html += '<div class="report-grid">';
     html += field('Objekt / Baustelle', store.meta.objekt);
